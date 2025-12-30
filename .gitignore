@@ -38,6 +38,9 @@ yarn-error.*
 
 app-example
 
+.vscode/
+
+
 # generated native folders
-/ios
-/android
+# /ios
+# /android
