@@ -57,3 +57,11 @@ export const getProfileImage = (file: ImageFile): ImageSourcePropType => {
 
   return require("../assets/images/default-avatar.png");
 };
+
+export const getFilePath = (file: ImageFile): string | null => {
+  if (!file) return null;
+  if (typeof file === "string") return file;
+  if (file.uri) return file.uri;
+  if (file.url) return file.url;
+  return null;
+};

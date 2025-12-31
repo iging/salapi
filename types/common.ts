@@ -17,3 +17,9 @@ export type ResponseType = {
   data?: any;
   msg?: string;
 };
+
+export type UseFetchDataReturn<T> = {
+  data: T[];
+  loading: boolean;
+  error: string | null;
+};

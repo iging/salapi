@@ -21,6 +21,10 @@ const StackLayout = () => {
           name="(modals)/profile-modal"
           options={{ presentation: "modal" }}
         />
+        <Stack.Screen
+          name="(modals)/wallet-modal"
+          options={{ presentation: "modal" }}
+        />
       </Stack>
       <Toast />
     </SafeAreaProvider>

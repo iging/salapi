@@ -6,6 +6,8 @@ import { colors } from "@/constants/theme";
 import { signOut } from "firebase/auth";
 import { StyleSheet, Text } from "react-native";
 
+// TODO: 3:39:26
+
 const Home = () => {
   const handleLogout = async () => {
     await signOut(auth);

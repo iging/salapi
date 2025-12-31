@@ -43,8 +43,10 @@ const ProfileModal = () => {
     });
   }, [user]);
 
+  const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB
+
   const onPickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [4, 3],
@@ -52,7 +54,18 @@ const ProfileModal = () => {
     });
 
     if (!result.canceled) {
-      setUserData({ ...userData, image: result.assets[0] });
+      const selectedImage = result.assets[0];
+
+      if (selectedImage.fileSize && selectedImage.fileSize > MAX_FILE_SIZE) {
+        Toast.show({
+          type: "error",
+          text1: "Image too large",
+          text2: "Please select an image under 3MB",
+        });
+        return;
+      }
+
+      setUserData({ ...userData, image: selectedImage });
     }
   };
 
@@ -101,7 +114,7 @@ const ProfileModal = () => {
           <View style={styles.inputContainer}>
             <Input
               label="Name"
-              placeholder="Name"
+              placeholder="Enter your name"
               value={userData.name}
               onChangeText={(text) => setUserData({ ...userData, name: text })}
             />
@@ -112,7 +125,7 @@ const ProfileModal = () => {
       <View style={styles.footer}>
         <Button onPress={onSubmit} loading={loading} style={{ flex: 1 }}>
           <Typo color={colors.black} fontWeight="700">
-            Update
+            Update Profile
           </Typo>
         </Button>
       </View>

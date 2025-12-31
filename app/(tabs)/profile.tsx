@@ -54,6 +54,7 @@ const Profile = () => {
   const handleLogout = async () => {
     setShowLogoutDialog(false);
     await logout();
+    router.replace("/(auth)/welcome");
   };
 
   const handlePress = async (items: accountOptionType) => {

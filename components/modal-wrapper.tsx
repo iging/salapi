@@ -1,26 +1,30 @@
 import { colors, spacingY } from "@/constants/theme";
 import { ModalWrapperProps } from "@/types";
-import React from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ModalWrapper = ({
   style,
   children,
   bg = colors.neutral800,
 }: ModalWrapperProps) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={[styles.container, { backgroundColor: bg }, style && style]}>
+    <View
+      style={[
+        {
+          flex: 1,
+          backgroundColor: bg,
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom + spacingY._10,
+        },
+        style,
+      ]}
+    >
       {children}
     </View>
   );
 };
 
 export default ModalWrapper;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: Platform.OS === "ios" ? spacingY._15 : 50,
-    paddingBottom: Platform.OS === "ios" ? spacingY._20 : spacingY._10,
-  },
-});
