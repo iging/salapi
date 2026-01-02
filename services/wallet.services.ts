@@ -5,8 +5,11 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
+  query,
   serverTimestamp,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { uploadFileToCloudinary } from "./image.services";
 
@@ -96,10 +99,24 @@ export const updateWallet = async (
 
 export const deleteWallet = async (walletId: string): Promise<ResponseType> => {
   try {
+    // Delete all transactions associated with this wallet
+    const transactionsRef = collection(firestore, "transactions");
+    const q = query(transactionsRef, where("walletId", "==", walletId));
+    const querySnapshot = await getDocs(q);
+
+    const deletePromises = querySnapshot.docs.map((docSnapshot) =>
+      deleteDoc(doc(firestore, "transactions", docSnapshot.id))
+    );
+    await Promise.all(deletePromises);
+
+    // Delete the wallet
     const walletRef = doc(firestore, "wallets", walletId);
     await deleteDoc(walletRef);
 
-    return { success: true, msg: "Wallet deleted successfully" };
+    return {
+      success: true,
+      msg: `Wallet and ${querySnapshot.size} transaction(s) deleted successfully`,
+    };
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Failed to delete wallet";

@@ -4,7 +4,7 @@ import { toPeso } from "@/utils/currency";
 import { verticalScale } from "@/utils/styling";
 import { Image } from "expo-image";
 import { Router } from "expo-router";
-import { CaretRightIcon } from "phosphor-react-native";
+import { CaretRightIcon, WalletIcon } from "phosphor-react-native";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Typo from "./typo";
@@ -37,12 +37,22 @@ const WalletListItem = ({
     >
       <TouchableOpacity style={styles.container} onPress={openWallet}>
         <View style={styles.imageContainer}>
-          <Image
-            style={{ flex: 1 }}
-            source={item?.image}
-            contentFit="cover"
-            transition={100}
-          />
+          {item?.image ? (
+            <Image
+              style={{ flex: 1 }}
+              source={item.image}
+              contentFit="cover"
+              transition={100}
+            />
+          ) : (
+            <View style={styles.fallbackIcon}>
+              <WalletIcon
+                size={verticalScale(24)}
+                weight="fill"
+                color={colors.white}
+              />
+            </View>
+          )}
         </View>
         <View style={styles.nameContainer}>
           <Typo size={16}>{item?.name}</Typo>
@@ -77,6 +87,12 @@ const styles = StyleSheet.create({
     borderRadius: radius._12,
     borderCurve: "continuous",
     overflow: "hidden",
+  },
+  fallbackIcon: {
+    flex: 1,
+    backgroundColor: colors.neutral700,
+    justifyContent: "center",
+    alignItems: "center",
   },
   nameContainer: {
     flex: 1,

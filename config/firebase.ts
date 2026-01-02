@@ -8,7 +8,12 @@ import {
   getReactNativePersistence,
   initializeAuth,
 } from "firebase/auth";
-import { Firestore, getFirestore } from "firebase/firestore";
+import {
+  Firestore,
+  getFirestore,
+  initializeFirestore,
+  memoryLocalCache,
+} from "firebase/firestore";
 import { Platform } from "react-native";
 
 const firebaseConfig = {
@@ -49,7 +54,15 @@ if (getApps().length === 1) {
   auth = getAuth(app);
 }
 
-// Firestore
-const firestore: Firestore = getFirestore(app);
+// Firestore - initialize with settings for React Native
+let firestore: Firestore;
+if (getApps().length === 1) {
+  firestore = initializeFirestore(app, {
+    localCache: memoryLocalCache(),
+    experimentalForceLongPolling: true,
+  });
+} else {
+  firestore = getFirestore(app);
+}
 
 export { analytics, app, auth, firestore };

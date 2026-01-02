@@ -22,7 +22,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { TrashIcon } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 const WalletModal = () => {
@@ -110,69 +116,75 @@ const WalletModal = () => {
 
   return (
     <ModalWrapper>
-      <View style={styles.container}>
-        <Header
-          title={oldWallet?.id ? "Update Wallet" : "New wallet"}
-          leftIcon={<BackButton />}
-          style={{ marginBottom: spacingY._10 }}
-        />
-        {/* Form */}
-        <ScrollView contentContainerStyle={styles.form}>
-          <View style={styles.inputContainer}>
-            <Controller
-              control={control}
-              name="name"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label="Wallet Name"
-                  placeholder="Enter wallet name"
-                  value={value}
-                  onChangeText={onChange}
-                  error={errors.name?.message}
-                />
-              )}
-            />
-          </View>
-          <View style={styles.inputContainer}>
-            <Typo size={14} color={colors.white} fontWeight="500">
-              Wallet Icon
-            </Typo>
-            <ImageUpload
-              file={walletImage}
-              onClear={() => setWalletImage(null)}
-              onSelect={(file) => setWalletImage(file)}
-              placeholder="Upload Image"
-            />
-          </View>
-        </ScrollView>
-      </View>
-      {/* Footer */}
-      <View style={styles.footer}>
-        {oldWallet?.id && !loading && (
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.container}>
+          <Header
+            title={oldWallet?.id ? "Update Wallet" : "New wallet"}
+            leftIcon={<BackButton />}
+            style={{ marginBottom: spacingY._10 }}
+          />
+          {/* Form */}
+          <ScrollView contentContainerStyle={styles.form}>
+            <View style={styles.inputContainer}>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    label="Wallet Name"
+                    placeholder="Enter wallet name"
+                    value={value}
+                    onChangeText={onChange}
+                    error={errors.name?.message}
+                  />
+                )}
+              />
+            </View>
+            <View style={styles.inputContainer}>
+              <Typo size={14} color={colors.white} fontWeight="500">
+                Wallet Icon
+              </Typo>
+              <ImageUpload
+                file={walletImage}
+                onClear={() => setWalletImage(null)}
+                onSelect={(file) => setWalletImage(file)}
+                placeholder="Upload Image"
+              />
+            </View>
+          </ScrollView>
+        </View>
+        {/* Footer */}
+        <View style={styles.footer}>
+          {oldWallet?.id && !loading && (
+            <Button
+              onPress={() => setShowDeleteDialog(true)}
+              style={{
+                backgroundColor: colors.rose,
+                paddingHorizontal: spacingX._15,
+              }}
+            >
+              <TrashIcon
+                color={colors.white}
+                size={verticalScale(24)}
+                weight="bold"
+              />
+            </Button>
+          )}
           <Button
-            onPress={() => setShowDeleteDialog(true)}
-            style={{
-              backgroundColor: colors.rose,
-              paddingHorizontal: spacingX._15,
-            }}
+            onPress={handleSubmit(onSubmit)}
+            loading={loading}
+            style={{ flex: 1 }}
           >
-            <TrashIcon
-              color={colors.white}
-              size={verticalScale(24)}
-              weight="bold"
-            />
+            <Typo color={colors.black} fontWeight="700">
+              {oldWallet?.id ? "Update Wallet" : "Add Wallet"}
+            </Typo>
           </Button>
-        )}
-        <Button
-          onPress={handleSubmit(onSubmit)}
-          loading={loading}
-          style={{ flex: 1 }}
-        >
-          <Typo color={colors.black} fontWeight="700">
-            {oldWallet?.id ? "Update Wallet" : "Add Wallet"}
-          </Typo>
-        </Button>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
+
       <Dialog
         visible={showDeleteDialog}
         title="Delete Wallet"
@@ -194,7 +206,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
     paddingHorizontal: spacingY._20,
-    paddingVertical: spacingY._30,
+    marginTop: verticalScale(8),
   },
   footer: {
     alignItems: "center",

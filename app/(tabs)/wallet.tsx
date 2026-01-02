@@ -1,30 +1,102 @@
-import Loading from "@/components/loading";
 import ScreenWrapper from "@/components/screen-wrapper";
+import { WalletSkeleton } from "@/components/skeletons";
 import Typo from "@/components/typo";
 import WalletListItem from "@/components/wallet-list-item";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import useFetchData from "@/hooks/use-fetch-data";
-import { WalletType } from "@/types";
+import { TransactionType, WalletType } from "@/types";
 import { toPeso } from "@/utils/currency";
 import { verticalScale } from "@/utils/styling";
 import { useRouter } from "expo-router";
 import { where } from "firebase/firestore";
 import { PlusCircleIcon } from "phosphor-react-native";
-import { FlatList, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useMemo } from "react";
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const Wallet = () => {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { data: wallets, loading } = useFetchData<WalletType>(
-    "wallets",
-    user?.uid ? [where("uid", "==", user.uid)] : []
+  const walletConstraints = useMemo(
+    () => (user?.uid ? [where("uid", "==", user.uid)] : []),
+    [user?.uid]
   );
 
-  const getTotalBalance = () => {
-    return wallets.reduce((sum, wallet) => sum + (wallet.amount || 0), 0);
+  const transactionConstraints = useMemo(
+    () => (user?.uid ? [where("uid", "==", user.uid)] : []),
+    [user?.uid]
+  );
+
+  const {
+    data: wallets,
+    loading: walletsLoading,
+    refreshing: walletsRefreshing,
+    refresh: refreshWallets,
+  } = useFetchData<WalletType>("wallets", walletConstraints);
+
+  const {
+    data: transactions,
+    refreshing: transactionsRefreshing,
+    refresh: refreshTransactions,
+  } = useFetchData<TransactionType>("transactions", transactionConstraints);
+
+  const isRefreshing = walletsRefreshing || transactionsRefreshing;
+
+  const handleRefresh = async () => {
+    await Promise.all([refreshWallets(), refreshTransactions()]);
   };
+
+  // Calculate balance for each wallet based on transactions
+  const walletsWithBalance = useMemo(() => {
+    return wallets.map((wallet) => {
+      const walletTransactions = transactions.filter(
+        (t) => t.walletId === wallet.id
+      );
+
+      let balance = 0;
+      walletTransactions.forEach((t) => {
+        if (t.type === "income") {
+          balance += t.amount;
+        } else {
+          balance -= t.amount;
+        }
+      });
+
+      return {
+        ...wallet,
+        amount: balance,
+        totalIncome: walletTransactions
+          .filter((t) => t.type === "income")
+          .reduce((sum, t) => sum + t.amount, 0),
+        totalExpenses: walletTransactions
+          .filter((t) => t.type === "expense")
+          .reduce((sum, t) => sum + t.amount, 0),
+      };
+    });
+  }, [wallets, transactions]);
+
+  const getTotalBalance = () => {
+    return walletsWithBalance.reduce(
+      (sum, wallet) => sum + (wallet.amount || 0),
+      0
+    );
+  };
+
+  // Show skeleton on initial load
+  if (walletsLoading) {
+    return (
+      <ScreenWrapper style={{ backgroundColor: colors.black }}>
+        <WalletSkeleton />
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper style={{ backgroundColor: colors.black }}>
@@ -58,15 +130,29 @@ const Wallet = () => {
             </TouchableOpacity>
           </View>
           {/* Wallet Lists */}
-          {loading && <Loading />}
+          {walletsWithBalance.length === 0 && (
+            <View style={styles.emptyState}>
+              <Typo size={15} color={colors.neutral400}>
+                No wallets yet. Create one to start tracking!
+              </Typo>
+            </View>
+          )}
           <FlatList
-            data={wallets}
-            renderItem={({ item, index }) => {
-              return (
-                <WalletListItem item={item} index={index} router={router} />
-              );
-            }}
+            data={walletsWithBalance}
+            renderItem={({ item, index }) => (
+              <WalletListItem item={item} index={index} router={router} />
+            )}
+            keyExtractor={(item) => item.id || String(Math.random())}
             contentContainerStyle={styles.listStyle}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={handleRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
           />
         </View>
       </View>
@@ -104,5 +190,11 @@ const styles = StyleSheet.create({
   listStyle: {
     paddingVertical: spacingY._25,
     paddingTop: spacingY._15,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: spacingY._40,
   },
 });

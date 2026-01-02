@@ -22,4 +22,6 @@ export type UseFetchDataReturn<T> = {
   data: T[];
   loading: boolean;
   error: string | null;
+  refreshing: boolean;
+  refresh: () => Promise<void>;
 };

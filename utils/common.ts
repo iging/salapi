@@ -12,7 +12,7 @@ export const getLast7Days = () => {
       expense: 0,
     });
   }
-  return result.reverse();
+  return result;
   // returns an array of all the previous 7 days
 };
 
@@ -33,8 +33,7 @@ export const getLast12Months = () => {
     });
   }
 
-  // return result;
-  return result.reverse();
+  return result;
 };
 
 interface YearData {
@@ -57,6 +56,5 @@ export const getYearsRange = (
       expense: 0,
     });
   }
-  // return result;
-  return result.reverse();
+  return result;
 };

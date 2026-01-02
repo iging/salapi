@@ -1,6 +1,7 @@
 import Dialog from "@/components/dialog";
 import Header from "@/components/header";
 import ScreenWrapper from "@/components/screen-wrapper";
+import { ProfileSkeleton } from "@/components/skeletons";
 import Typo from "@/components/typo";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
@@ -16,13 +17,21 @@ import {
   PowerIcon,
   UserIcon,
 } from "phosphor-react-native";
-import { useState } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { useCallback, useState } from "react";
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
 const Profile = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserData } = useAuth();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const accountOptions: accountOptionType[] = [
     {
@@ -51,6 +60,17 @@ const Profile = () => {
     },
   ];
 
+  const handleRefresh = useCallback(async () => {
+    if (!user?.uid) return;
+    setRefreshing(true);
+    setLoading(true);
+    await updateUserData(user.uid);
+    // Small delay to show skeleton
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setLoading(false);
+    setRefreshing(false);
+  }, [user?.uid, updateUserData]);
+
   const handleLogout = async () => {
     setShowLogoutDialog(false);
     await logout();
@@ -65,79 +85,102 @@ const Profile = () => {
     if (items.routeName) router.push(items.routeName);
   };
 
+  // Show skeleton when loading
+  if (loading) {
+    return (
+      <ScreenWrapper>
+        <ProfileSkeleton />
+      </ScreenWrapper>
+    );
+  }
+
   return (
     <ScreenWrapper>
-      <View style={styles.container}>
-        <Header title="Profile" style={{ marginVertical: spacingY._10 }} />
-        {/* User Info */}
-        <View style={styles.userInfo}>
-          {/* Avatar */}
-          <View>
-            <Image
-              source={getProfileImage(user?.image)}
-              style={styles.avatar}
-              contentFit="cover"
-              transition={100}
-            />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        <View style={styles.container}>
+          <Header title="Profile" style={{ marginVertical: spacingY._10 }} />
+          {/* User Info */}
+          <View style={styles.userInfo}>
+            {/* Avatar */}
+            <View>
+              <Image
+                source={getProfileImage(user?.image)}
+                style={styles.avatar}
+                contentFit="cover"
+                transition={100}
+              />
+            </View>
+            {/* Credentials */}
+            <View style={styles.nameContainer}>
+              <Typo size={24} fontWeight="600" color={colors.neutral100}>
+                {user?.name}
+              </Typo>
+              <Typo size={15} color={colors.neutral400}>
+                {user?.email}
+              </Typo>
+            </View>
           </View>
-          {/* Credentials */}
-          <View style={styles.nameContainer}>
-            <Typo size={24} fontWeight="600" color={colors.neutral100}>
-              {user?.name}
-            </Typo>
-            <Typo size={15} color={colors.neutral400}>
-              {user?.email}
-            </Typo>
-          </View>
-        </View>
-        {/* Account Options */}
-        <View style={styles.accountOptions}>
-          {accountOptions.map((items, index) => {
-            return (
-              <Animated.View
-                entering={FadeInDown.delay(index * 50)
-                  .springify()
-                  .damping(14)}
-                style={styles.listItem}
-                key={index.toString()}
-              >
-                <TouchableOpacity
-                  style={styles.flexRow}
-                  onPress={() => handlePress(items)}
+          {/* Account Options */}
+          <View style={styles.accountOptions}>
+            {accountOptions.map((items, index) => {
+              return (
+                <Animated.View
+                  entering={FadeInDown.delay(index * 50)
+                    .springify()
+                    .damping(14)}
+                  style={styles.listItem}
+                  key={index.toString()}
                 >
-                  {/* Icon */}
-                  <View
-                    style={[
-                      styles.listIcon,
-                      { backgroundColor: items?.bgColor },
-                    ]}
+                  <TouchableOpacity
+                    style={styles.flexRow}
+                    onPress={() => handlePress(items)}
                   >
-                    {items.icon && items.icon}
-                  </View>
-                  <Typo size={16} style={{ flex: 1 }} fontWeight="500">
-                    {items.title}
-                  </Typo>
-                  <CaretRightIcon
-                    size={verticalScale(20)}
-                    weight="bold"
-                    color={colors.white}
-                  />
-                </TouchableOpacity>
-              </Animated.View>
-            );
-          })}
+                    {/* Icon */}
+                    <View
+                      style={[
+                        styles.listIcon,
+                        { backgroundColor: items?.bgColor },
+                      ]}
+                    >
+                      {items.icon && items.icon}
+                    </View>
+                    <Typo size={16} style={{ flex: 1 }} fontWeight="500">
+                      {items.title}
+                    </Typo>
+                    <CaretRightIcon
+                      size={verticalScale(20)}
+                      weight="bold"
+                      color={colors.white}
+                    />
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
+          <Dialog
+            visible={showLogoutDialog}
+            title="Logout"
+            message="Are you sure you want to logout?"
+            confirmText="Logout"
+            cancelText="Cancel"
+            confirmColor={colors.rose}
+            onConfirm={handleLogout}
+            onCancel={() => setShowLogoutDialog(false)}
+          />
         </View>
-        <Dialog
-          visible={showLogoutDialog}
-          title="Logout"
-          message="Are you sure you want to logout?"
-          confirmText="Logout"
-          cancelText="Cancel"
-          confirmColor={colors.rose}
-          onConfirm={handleLogout}
-          onCancel={() => setShowLogoutDialog(false)}
-        />
-      </View>
+      </ScrollView>
     </ScreenWrapper>
   );
 };
@@ -145,6 +188,12 @@ const Profile = () => {
 export default Profile;
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     paddingHorizontal: spacingX._20,

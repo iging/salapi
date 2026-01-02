@@ -6,6 +6,7 @@ export type TransactionType = {
   type: string;
   amount: number;
   category?: string;
+  customCategory?: string;
   date: Date | Timestamp | string;
   description?: string;
   image?: any;

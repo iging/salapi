@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.neutral800,
     alignItems: "center",
     justifyContent: "space-evenly",
-    paddingVertical: spacingY._15,
+    paddingVertical: spacingY._5,
     borderRadius: radius._30,
     shadowColor: colors.black,
     shadowOffset: { width: 0, height: 4 },

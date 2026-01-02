@@ -39,6 +39,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    "@react-native-community/datetimepicker",
   ],
   experiments: {
     typedRoutes: true,

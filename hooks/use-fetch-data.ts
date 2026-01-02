@@ -6,7 +6,7 @@ import {
   query,
   QueryConstraint,
 } from "firebase/firestore";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const useFetchData = <T>(
   collectionName: string,
@@ -15,15 +15,28 @@ const useFetchData = <T>(
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const constraintsKey = useMemo(
     () => JSON.stringify(constraints.map((c) => c.type)),
     [constraints]
   );
 
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    setLoading(true);
+    // Trigger re-subscription by changing the key
+    setRefreshKey((prev) => prev + 1);
+    // Small delay to show skeleton
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setRefreshing(false);
+  }, []);
+
   useEffect(() => {
     if (!collectionName) return;
 
+    setLoading(true);
     const collectionRef = collection(firestore, collectionName);
     const q = query(collectionRef, ...constraints);
 
@@ -46,9 +59,9 @@ const useFetchData = <T>(
     );
 
     return () => unsubscribe();
-  }, [collectionName, constraintsKey, constraints]);
+  }, [collectionName, constraintsKey, constraints, refreshKey]);
 
-  return { data, loading, error };
+  return { data, loading, error, refreshing, refresh };
 };
 
 export default useFetchData;

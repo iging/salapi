@@ -25,6 +25,14 @@ const StackLayout = () => {
           name="(modals)/wallet-modal"
           options={{ presentation: "modal" }}
         />
+        <Stack.Screen
+          name="(modals)/transaction-modal"
+          options={{ presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="(modals)/search-modal"
+          options={{ presentation: "modal" }}
+        />
       </Stack>
       <Toast />
     </SafeAreaProvider>
