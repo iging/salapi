@@ -54,12 +54,14 @@ const Statistics = () => {
     return new Date(date);
   };
 
-  // Sort transactions by date descending
+  // Sort transactions by date descending and limit to 10
   const transactions = useMemo(() => {
-    return [...transactionsRaw].sort(
-      (a, b) =>
-        moment(toDate(b.date)).valueOf() - moment(toDate(a.date)).valueOf()
-    );
+    return [...transactionsRaw]
+      .sort(
+        (a, b) =>
+          moment(toDate(b.date)).valueOf() - moment(toDate(a.date)).valueOf()
+      )
+      .slice(0, 10);
   }, [transactionsRaw]);
 
   const getBarColor = (type: "income" | "expense") => {

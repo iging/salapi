@@ -38,22 +38,27 @@ const SearchModal = () => {
   } = useFetchData<TransactionType>("transactions", transactionConstraints);
 
   const filteredTransactions = useMemo(() => {
-    if (!search.trim()) return transactions;
+    let results = transactions;
 
-    const searchLower = search.toLowerCase().trim();
-    return transactions.filter((transaction) => {
-      const category = transaction.category?.toLowerCase() || "";
-      const customCategory = transaction.customCategory?.toLowerCase() || "";
-      const description = transaction.description?.toLowerCase() || "";
-      const amount = transaction.amount?.toString() || "";
+    if (search.trim()) {
+      const searchLower = search.toLowerCase().trim();
+      results = transactions.filter((transaction) => {
+        const category = transaction.category?.toLowerCase() || "";
+        const customCategory = transaction.customCategory?.toLowerCase() || "";
+        const description = transaction.description?.toLowerCase() || "";
+        const amount = transaction.amount?.toString() || "";
 
-      return (
-        category.includes(searchLower) ||
-        customCategory.includes(searchLower) ||
-        description.includes(searchLower) ||
-        amount.includes(searchLower)
-      );
-    });
+        return (
+          category.includes(searchLower) ||
+          customCategory.includes(searchLower) ||
+          description.includes(searchLower) ||
+          amount.includes(searchLower)
+        );
+      });
+    }
+
+    // Limit to 10 items
+    return results.slice(0, 10);
   }, [transactions, search]);
 
   // Show skeleton on initial load

@@ -64,14 +64,14 @@ const Home = () => {
     return new Date(date);
   };
 
-  // Get recent transactions (last 5, sorted by date descending)
+  // Get recent transactions (last 10, sorted by date descending)
   const recentTransactions = useMemo(() => {
     return [...transactions]
       .sort(
         (a, b) =>
           moment(toDate(b.date)).valueOf() - moment(toDate(a.date)).valueOf()
       )
-      .slice(0, 5);
+      .slice(0, 10);
   }, [transactions]);
 
   // Show skeleton on initial load or refresh
