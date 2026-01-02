@@ -15,6 +15,7 @@ import {
   GearSixIcon,
   LockIcon,
   PowerIcon,
+  QuestionIcon,
   UserIcon,
 } from "phosphor-react-native";
 import { useCallback, useState } from "react";
@@ -35,7 +36,7 @@ const Profile = () => {
 
   const accountOptions: accountOptionType[] = [
     {
-      title: "Edit Profile",
+      title: "Account",
       icon: <UserIcon size={26} color={colors.white} />,
       routeName: "/(modals)/profile-modal",
       bgColor: colors.neutral600,
@@ -43,13 +44,19 @@ const Profile = () => {
     {
       title: "Settings",
       icon: <GearSixIcon size={26} color={colors.white} />,
-      //   routeName: "/(modals)/profile-modal",
+      routeName: "/(modals)/settings-modal",
+      bgColor: colors.neutral600,
+    },
+    {
+      title: "Help",
+      icon: <QuestionIcon size={26} color={colors.white} />,
+      routeName: "/(modals)/help-center-modal",
       bgColor: colors.neutral600,
     },
     {
       title: "Privacy Policy",
       icon: <LockIcon size={26} color={colors.white} />,
-      //   routeName: "/(modals)/profile-modal",
+      routeName: "/(modals)/privacy-policy-modal",
       bgColor: colors.neutral600,
     },
     {

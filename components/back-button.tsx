@@ -6,12 +6,14 @@ import { useRouter } from "expo-router";
 import { CaretLeftIcon } from "phosphor-react-native";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
-const BackButton = ({ style, iconSize = 26 }: BackButtonProps) => {
+const BackButton = ({ style, iconSize = 26, onPress }: BackButtonProps) => {
   const router = useRouter();
   const navigation = useNavigation();
 
   const handleBack = () => {
-    if (navigation.canGoBack()) {
+    if (onPress) {
+      onPress();
+    } else if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace("/(tabs)");

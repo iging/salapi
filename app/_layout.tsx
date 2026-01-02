@@ -33,6 +33,14 @@ const StackLayout = () => {
           name="(modals)/search-modal"
           options={{ presentation: "modal" }}
         />
+        <Stack.Screen
+          name="(modals)/privacy-policy-modal"
+          options={{ presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="(modals)/settings-modal"
+          options={{ presentation: "modal" }}
+        />
       </Stack>
       <Toast />
     </SafeAreaProvider>

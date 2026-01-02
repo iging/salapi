@@ -1,20 +1,27 @@
 import BackButton from "@/components/back-button";
 import Button from "@/components/button";
+import Dialog from "@/components/dialog";
 import Header from "@/components/header";
 import Input from "@/components/input";
 import ModalWrapper from "@/components/modal-wrapper";
+import PasswordRequirements from "@/components/password-requirements";
 import { ProfileModalSkeleton } from "@/components/skeletons";
 import Typo from "@/components/typo";
 import { colors, spacingX, spacingY } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import { getProfileImage } from "@/services/image.services";
-import { updateUser } from "@/services/user.services";
+import {
+  changeUserPassword,
+  deleteUserAccount,
+  updateUser,
+} from "@/services/user.services";
 import { UserDataType } from "@/types";
 import { scale, verticalScale } from "@/utils/styling";
+import Constants from "expo-constants";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useNavigation, useRouter } from "expo-router";
-import { PencilIcon } from "phosphor-react-native";
+import { PencilIcon, TrashIcon } from "phosphor-react-native";
 import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -35,7 +42,17 @@ const ProfileModal = () => {
     image: null,
   });
   const [loading, setLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const isSuperAccount =
+    user?.uid === Constants.expoConfig?.extra?.superAccountUid;
 
   const goBack = () => {
     if (navigation.canGoBack()) {
@@ -90,6 +107,30 @@ const ProfileModal = () => {
     if (!user?.uid) return;
 
     setLoading(true);
+
+    // Check if user wants to change password
+    const isChangingPassword =
+      currentPassword || newPassword || confirmPassword;
+
+    if (isChangingPassword) {
+      // Validate all password fields are filled
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        Toast.show({
+          type: "error",
+          text1: "Password Required",
+          text2: "Please fill all password fields to change password",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const passwordChanged = await handleChangePassword();
+      if (!passwordChanged) {
+        setLoading(false);
+        return;
+      }
+    }
+
     const result = await updateUser(user.uid, userData);
     setLoading(false);
 
@@ -99,6 +140,65 @@ const ProfileModal = () => {
       goBack();
     } else {
       Toast.show({ type: "error", text1: result.msg });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user?.uid) return;
+
+    setShowDeleteDialog(false);
+    setDeleteLoading(true);
+
+    const result = await deleteUserAccount(user.uid);
+
+    setDeleteLoading(false);
+
+    if (result.success) {
+      Toast.show({
+        type: "success",
+        text1: "Account Deleted",
+        text2: "Your account and all data have been permanently deleted",
+      });
+      router.replace("/(auth)/welcome");
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Delete Failed",
+        text2: result.msg,
+      });
+    }
+  };
+
+  const handleChangePassword = async (): Promise<boolean> => {
+    // Validate password fields
+    if (newPassword !== confirmPassword) {
+      Toast.show({
+        type: "error",
+        text1: "Password Mismatch",
+        text2: "New password and confirm password do not match",
+      });
+      return false;
+    }
+
+    const result = await changeUserPassword(currentPassword, newPassword);
+
+    if (result.success) {
+      Toast.show({
+        type: "success",
+        text1: "Password Changed",
+        text2: "Your password has been updated successfully",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      return true;
+    } else {
+      Toast.show({
+        type: "error",
+        text1: "Change Failed",
+        text2: result.msg,
+      });
+      return false;
     }
   };
 
@@ -124,7 +224,11 @@ const ProfileModal = () => {
             style={{ marginBottom: spacingY._10 }}
           />
           {/* Form */}
-          <ScrollView contentContainerStyle={styles.form}>
+          <ScrollView
+            contentContainerStyle={styles.form}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
             <View style={styles.avatarContainer}>
               <Image
                 style={styles.avatar}
@@ -149,6 +253,83 @@ const ProfileModal = () => {
                 }
               />
             </View>
+
+            {/* Change Password Section - Hidden for super account */}
+            {!isSuperAccount && (
+              <View style={styles.passwordSection}>
+                <Typo size={14} fontWeight="600" color={colors.neutral400}>
+                  Change Password
+                </Typo>
+                <Typo
+                  size={12}
+                  color={colors.neutral500}
+                  style={{ marginTop: spacingY._5, marginBottom: spacingY._15 }}
+                >
+                  Leave blank if you don&apos;t want to change your password.
+                </Typo>
+
+                <View style={styles.passwordInputs}>
+                  <Input
+                    label="Current Password"
+                    placeholder="Enter current password"
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                  />
+
+                  <Input
+                    label="New Password"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                  />
+
+                  {newPassword.length > 0 && (
+                    <PasswordRequirements password={newPassword} />
+                  )}
+
+                  <Input
+                    label="Confirm New Password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Delete Account Section - Hidden for super account */}
+            {!isSuperAccount && (
+              <View style={styles.dangerZone}>
+                <Typo size={14} fontWeight="600" color={colors.rose}>
+                  Danger Zone
+                </Typo>
+                <Typo
+                  size={12}
+                  color={colors.neutral400}
+                  style={{ marginTop: spacingY._5 }}
+                >
+                  Deleting your account will permanently remove all your data
+                  including wallets, transactions, and profile information. This
+                  action cannot be undone.
+                </Typo>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => setShowDeleteDialog(true)}
+                  disabled={deleteLoading}
+                >
+                  <TrashIcon size={verticalScale(18)} color={colors.white} />
+                  <Typo size={14} fontWeight="600" color={colors.white}>
+                    {deleteLoading ? "Deleting..." : "Delete Account"}
+                  </Typo>
+                </TouchableOpacity>
+              </View>
+            )}
           </ScrollView>
         </View>
         {/* Footer */}
@@ -160,6 +341,18 @@ const ProfileModal = () => {
           </Button>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog
+        visible={showDeleteDialog}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This will permanently delete all your wallets, transactions, and profile data. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor={colors.rose}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setShowDeleteDialog(false)}
+      />
     </ModalWrapper>
   );
 };
@@ -187,6 +380,7 @@ const styles = StyleSheet.create({
   form: {
     gap: spacingY._30,
     marginTop: spacingY._15,
+    paddingBottom: spacingY._30,
   },
   avatarContainer: {
     position: "relative",
@@ -218,5 +412,31 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     gap: spacingY._10,
+  },
+  dangerZone: {
+    backgroundColor: colors.neutral900,
+    borderRadius: 12,
+    padding: spacingX._15,
+    borderWidth: 1,
+    borderColor: colors.rose,
+    marginTop: spacingY._10,
+  },
+  deleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacingX._10,
+    backgroundColor: colors.rose,
+    paddingVertical: spacingY._12,
+    borderRadius: 10,
+    marginTop: spacingY._15,
+  },
+  passwordSection: {
+    backgroundColor: colors.neutral900,
+    borderRadius: 12,
+    padding: spacingX._15,
+  },
+  passwordInputs: {
+    gap: spacingY._15,
   },
 });

@@ -119,13 +119,15 @@ const Login = () => {
                 />
               )}
             />
-            <Typo
-              size={14}
-              color={colors.text}
-              style={{ alignSelf: "flex-end" }}
-            >
-              Forgot Password?
-            </Typo>
+            <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+              <Typo
+                size={14}
+                color={colors.text}
+                style={{ alignSelf: "flex-end" }}
+              >
+                Forgot Password?
+              </Typo>
+            </Pressable>
             <Button loading={isSubmitting} onPress={handleSubmit(onSubmit)}>
               <Typo fontWeight="700" color={colors.black} size={21}>
                 Login
