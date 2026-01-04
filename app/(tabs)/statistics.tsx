@@ -13,6 +13,7 @@ import {
   fetchYearlyStats,
 } from "@/services/transaction.services";
 import { TransactionType } from "@/types";
+import { toPeso } from "@/utils/currency";
 import { scale, verticalScale } from "@/utils/styling";
 import SegmentControl from "@react-native-segmented-control/segmented-control";
 import { where } from "firebase/firestore";
@@ -66,6 +67,22 @@ const Statistics = () => {
 
   const getBarColor = (type: "income" | "expense") => {
     return type === "income" ? colors.green : colors.rose;
+  };
+
+  // Format Y-axis labels to prevent overflow with ellipsis
+  const formatYLabel = (value: string) => {
+    const numValue = parseFloat(value.replace(/[₱,]/g, ""));
+    if (isNaN(numValue)) return value;
+
+    // If the number is very large, abbreviate it
+    if (numValue >= 1000000) {
+      return `₱${(numValue / 1000000).toFixed(1)}M`;
+    } else if (numValue >= 10000) {
+      return `₱${(numValue / 1000).toFixed(0)}K`;
+    } else if (numValue >= 1000) {
+      return `₱${(numValue / 1000).toFixed(1)}K`;
+    }
+    return toPeso(numValue);
   };
 
   // Calculate a nice round max value for the Y-axis
@@ -231,20 +248,23 @@ const Statistics = () => {
             ) : chartData.length > 0 ? (
               <BarChart
                 data={chartData}
-                barWidth={scale(12)}
-                spacing={[1, 2].includes(activeIndex) ? scale(25) : scale(16)}
+                barWidth={scale(10)}
+                spacing={[1, 2].includes(activeIndex) ? scale(30) : scale(20)}
                 roundedTop
                 roundedBottom
                 hideRules
-                yAxisLabelPrefix="₱"
                 yAxisThickness={0}
                 xAxisThickness={0}
-                yAxisLabelWidth={scale(30)}
-                yAxisTextStyle={{ color: colors.neutral350 }}
+                yAxisLabelWidth={scale(55)}
+                yAxisTextStyle={{
+                  color: colors.neutral350,
+                  fontSize: verticalScale(11),
+                }}
                 xAxisLabelTextStyle={{
                   color: colors.neutral350,
-                  fontSize: verticalScale(12),
+                  fontSize: verticalScale(11),
                 }}
+                formatYLabel={formatYLabel}
                 noOfSections={3}
                 maxValue={maxValue}
                 minHeight={5}

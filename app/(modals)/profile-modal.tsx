@@ -78,7 +78,7 @@ const ProfileModal = () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [1, 1],
       quality: 0.5,
     });
 
@@ -195,7 +195,7 @@ const ProfileModal = () => {
     } else {
       Toast.show({
         type: "error",
-        text1: "Change Failed",
+        text1: "Password Change Failed",
         text2: result.msg,
       });
       return false;

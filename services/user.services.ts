@@ -1,6 +1,6 @@
 import { auth, firestore } from "@/config/firebase";
 import { ResponseType, UserDataType } from "@/types";
-import { getAuthErrorMessage } from "@/utils/firebase-errors";
+import { getPasswordChangeErrorMessage } from "@/utils/firebase-errors";
 import { FirebaseError } from "firebase/app";
 import {
   deleteUser,
@@ -121,7 +121,7 @@ export const changeUserPassword = async (
     return { success: true, msg: "Password updated successfully" };
   } catch (error) {
     if (error instanceof FirebaseError) {
-      return { success: false, msg: getAuthErrorMessage(error.code) };
+      return { success: false, msg: getPasswordChangeErrorMessage(error.code) };
     }
     const errorMessage =
       error instanceof Error ? error.message : "Failed to change password";

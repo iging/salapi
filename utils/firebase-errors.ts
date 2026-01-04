@@ -32,3 +32,29 @@ export const getAuthErrorMessage = (errorCode: string): string => {
     "An unexpected error occurred. Please try again."
   );
 };
+
+export const getPasswordChangeErrorMessage = (errorCode: string): string => {
+  const errorMessages: Record<string, string> = {
+    // Password change specific errors
+    "auth/invalid-credential":
+      "Current password is incorrect. Please try again.",
+    "auth/wrong-password": "Current password is incorrect. Please try again.",
+    "auth/weak-password":
+      "New password is too weak. Please choose a stronger password.",
+    "auth/too-many-requests":
+      "Too many failed attempts. Please try again later.",
+    "auth/requires-recent-login":
+      "Please sign out and sign in again before changing your password.",
+
+    // Network errors
+    "auth/network-request-failed":
+      "Network error. Please check your connection and try again.",
+
+    // General errors
+    "auth/internal-error": "Something went wrong. Please try again later.",
+  };
+
+  return (
+    errorMessages[errorCode] || "Failed to change password. Please try again."
+  );
+};
