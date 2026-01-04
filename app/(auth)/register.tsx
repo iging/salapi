@@ -48,8 +48,10 @@ const Register = () => {
       Toast.show({
         type: "success",
         text1: "Account Created!",
-        text2: result.msg || "Please check your email to verify your account",
-        visibilityTime: 5000,
+        text2:
+          result.msg ||
+          "Please check your email (including spam/junk folder) to verify your account",
+        visibilityTime: 7000,
       });
       router.push("/(auth)/login");
     } else {

@@ -187,7 +187,8 @@ const TransactionModal = () => {
       result = await updateTransaction(
         oldTransaction.id,
         transactionData,
-        oldTransactionData
+        oldTransactionData,
+        user.uid
       );
     } else {
       result = await createTransaction(user.uid, transactionData);
@@ -204,7 +205,7 @@ const TransactionModal = () => {
   };
 
   const handleDelete = async () => {
-    if (!oldTransaction?.id) return;
+    if (!oldTransaction?.id || !user?.uid) return;
 
     setShowDeleteDialog(false);
     setLoading(true);
@@ -213,7 +214,8 @@ const TransactionModal = () => {
       oldTransaction.id,
       oldTransaction.walletId,
       Number(oldTransaction.amount),
-      oldTransaction.type
+      oldTransaction.type,
+      user.uid
     );
 
     setLoading(false);

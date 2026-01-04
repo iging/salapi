@@ -81,7 +81,7 @@ const WalletModal = () => {
 
     let result;
     if (oldWallet?.id) {
-      result = await updateWallet(oldWallet.id, walletData);
+      result = await updateWallet(oldWallet.id, walletData, user.uid);
     } else {
       result = await createWallet(user.uid, walletData);
     }
@@ -97,12 +97,12 @@ const WalletModal = () => {
   };
 
   const handleDelete = async () => {
-    if (!oldWallet?.id) return;
+    if (!oldWallet?.id || !user?.uid) return;
 
     setShowDeleteDialog(false);
     setLoading(true);
 
-    const result = await deleteWallet(oldWallet.id);
+    const result = await deleteWallet(oldWallet.id, user.uid);
 
     setLoading(false);
 

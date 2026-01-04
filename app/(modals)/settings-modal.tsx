@@ -94,7 +94,9 @@ const SettingsModal = () => {
         }
       }
     } catch (error) {
-      console.error("Error loading date range:", error);
+      if (__DEV__) {
+        console.error("Error loading date range:", error);
+      }
     } finally {
       setIsLoadingRange(false);
     }
@@ -113,7 +115,9 @@ const SettingsModal = () => {
       );
       setTransactionCount(result.count);
     } catch (error) {
-      console.error("Error checking transaction count:", error);
+      if (__DEV__) {
+        console.error("Error checking transaction count:", error);
+      }
       setTransactionCount(0);
     } finally {
       setIsCheckingCount(false);

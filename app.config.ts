@@ -14,6 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     supportsTablet: true,
   },
   android: {
+    package: "com.akosikhada.salapi",
     adaptiveIcon: {
       backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/logo/salapi-logo.png",
@@ -59,6 +60,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     cloudinary: {
       cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
       uploadPreset: process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+    },
+    eas: {
+      projectId: "05366dfb-c8aa-4aac-a786-cfc7fb71fd9a",
     },
   },
 });

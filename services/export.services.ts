@@ -18,6 +18,17 @@ import {
 } from "firebase/firestore";
 import moment from "moment";
 
+// HTML escape function to prevent XSS in PDF generation
+const escapeHtml = (str: string): string => {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
 // Helper to convert Firestore date to JS Date
 const getDateFromTransaction = (date: string | Date | Timestamp): Date => {
   if (date instanceof Timestamp) {
@@ -190,8 +201,10 @@ const generatePDFTemplate = (
   const transactionRows = transactions
     .map((t) => {
       const date = moment(getDateFromTransaction(t.date)).format("MMM D, YYYY");
-      const category = t.customCategory || t.category || "Uncategorized";
-      const description = t.description || "-";
+      const category = escapeHtml(
+        t.customCategory || t.category || "Uncategorized"
+      );
+      const description = escapeHtml(t.description || "-");
       const isIncome = t.type === "income";
       const amountColor = isIncome ? "#16a34a" : "#ef4444";
       const amountPrefix = isIncome ? "+" : "-";
@@ -486,7 +499,7 @@ const generatePDFTemplate = (
         <div class="report-info">
           <div class="report-title">Financial Report</div>
           <div class="report-date">Generated: ${generatedDate}</div>
-          <div class="report-user">${userName}</div>
+          <div class="report-user">${escapeHtml(userName)}</div>
         </div>
       </div>
       

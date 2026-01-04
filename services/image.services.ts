@@ -8,6 +8,20 @@ import { ImageSourcePropType } from "react-native";
 
 type ImageFile = string | { uri?: string; url?: string } | null | undefined;
 
+// Allowed image extensions for security
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "gif", "webp"];
+
+// Validate file extension from URI
+const getFileExtension = (uri: string): string => {
+  const match = uri.match(/\.([^.]+)$/);
+  return match ? match[1].toLowerCase() : "";
+};
+
+const isAllowedImageType = (uri: string): boolean => {
+  const extension = getFileExtension(uri);
+  return ALLOWED_EXTENSIONS.includes(extension);
+};
+
 export const uploadFileToCloudinary = async (
   file: { uri?: string } | string,
   folderName: string
@@ -17,6 +31,14 @@ export const uploadFileToCloudinary = async (
 
     if (!uri) {
       return { success: false, msg: "No file provided" };
+    }
+
+    // Validate file type before upload
+    if (!isAllowedImageType(uri)) {
+      return {
+        success: false,
+        msg: "Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.",
+      };
     }
 
     const formData = new FormData();

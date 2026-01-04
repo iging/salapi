@@ -128,3 +128,44 @@ export const changeUserPassword = async (
     return { success: false, msg: errorMessage };
   }
 };
+
+export type EmailVerificationResult = {
+  exists: boolean;
+  verified: boolean;
+};
+
+export const checkEmailVerificationStatus = async (
+  email: string
+): Promise<EmailVerificationResult> => {
+  try {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Query Firestore directly - try both email formats for backward compatibility
+    const usersRef = collection(firestore, "users");
+
+    // Try lowercase first
+    let q = query(usersRef, where("email", "==", normalizedEmail));
+    let querySnapshot = await getDocs(q);
+
+    // If not found, try original case
+    if (querySnapshot.empty) {
+      q = query(usersRef, where("email", "==", email.trim()));
+      querySnapshot = await getDocs(q);
+    }
+
+    if (querySnapshot.empty) {
+      return { exists: false, verified: false };
+    }
+
+    // Get the user document
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    // Check if emailVerified field exists, default to false if not
+    const isVerified = userData.emailVerified === true;
+
+    return { exists: true, verified: isVerified };
+  } catch {
+    return { exists: false, verified: false };
+  }
+};

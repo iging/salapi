@@ -10,7 +10,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import {
   createContext,
   FC,
@@ -31,7 +31,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const isSuperAccount = firebaseUser.uid === SUPER_ACCOUNT_UID;
+        // Super account bypass only allowed in development mode
+        const isSuperAccount =
+          __DEV__ && firebaseUser.uid === SUPER_ACCOUNT_UID;
 
         if (firebaseUser.emailVerified || isSuperAccount) {
           await updateUserData(firebaseUser.uid);
@@ -54,8 +56,8 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
 
-      // Skip email verification for super account
-      const isSuperAccount = result.user.uid === SUPER_ACCOUNT_UID;
+      // Skip email verification for super account (only in development mode)
+      const isSuperAccount = __DEV__ && result.user.uid === SUPER_ACCOUNT_UID;
 
       if (!result.user.emailVerified && !isSuperAccount) {
         await signOut(auth);
@@ -63,6 +65,12 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           success: false,
           msg: "Please verify your email before logging in. Check your inbox.",
         };
+      }
+
+      // Update emailVerified status in Firestore if verified
+      if (result.user.emailVerified) {
+        const userRef = doc(firestore, "users", result.user.uid);
+        await updateDoc(userRef, { emailVerified: true });
       }
 
       return { success: true };
@@ -83,6 +91,35 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         return { success: false, msg: "Passwords do not match" };
       }
 
+      // Server-side password validation
+      if (password.length < 6) {
+        return {
+          success: false,
+          msg: "Password must be at least 6 characters",
+        };
+      }
+      if (!/[A-Z]/.test(password)) {
+        return {
+          success: false,
+          msg: "Password must contain an uppercase letter",
+        };
+      }
+      if (!/[a-z]/.test(password)) {
+        return {
+          success: false,
+          msg: "Password must contain a lowercase letter",
+        };
+      }
+      if (!/[0-9]/.test(password)) {
+        return { success: false, msg: "Password must contain a number" };
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        return {
+          success: false,
+          msg: "Password must contain a special character",
+        };
+      }
+
       const result = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -93,8 +130,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
       await setDoc(doc(firestore, "users", result.user.uid), {
         name,
-        email,
+        email: email.toLowerCase().trim(),
         uid: result.user.uid,
+        emailVerified: false,
       });
 
       await signOut(auth);
@@ -124,7 +162,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         });
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      if (__DEV__) {
+        console.error("Error fetching user data:", error);
+      }
     }
   };
 
@@ -133,7 +173,9 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       await signOut(auth);
       setUser(null);
     } catch (error) {
-      console.error("Error logging out:", error);
+      if (__DEV__) {
+        console.error("Error logging out:", error);
+      }
     }
   };
 

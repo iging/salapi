@@ -40,7 +40,9 @@ const updateWalletBalance = async (
     // Check if wallet exists before updating
     const walletDoc = await getDoc(walletRef);
     if (!walletDoc.exists()) {
-      console.warn(`Wallet ${walletId} not found, skipping balance update`);
+      if (__DEV__) {
+        console.warn(`Wallet ${walletId} not found, skipping balance update`);
+      }
       return;
     }
 
@@ -58,7 +60,9 @@ const updateWalletBalance = async (
       });
     }
   } catch (error) {
-    console.error("Failed to update wallet balance:", error);
+    if (__DEV__) {
+      console.error("Failed to update wallet balance:", error);
+    }
   }
 };
 
@@ -67,6 +71,38 @@ export const createTransaction = async (
   transactionData: Partial<TransactionType>
 ): Promise<ResponseType> => {
   try {
+    // Server-side balance validation for expenses
+    if (
+      transactionData.type === "expense" &&
+      transactionData.walletId &&
+      transactionData.amount
+    ) {
+      const walletRef = doc(firestore, "wallets", transactionData.walletId);
+      const walletDoc = await getDoc(walletRef);
+
+      if (!walletDoc.exists()) {
+        return { success: false, msg: "Wallet not found" };
+      }
+
+      // Verify wallet ownership
+      if (walletDoc.data()?.uid !== uid) {
+        return {
+          success: false,
+          msg: "Unauthorized: You don't own this wallet",
+        };
+      }
+
+      const walletBalance = walletDoc.data()?.amount ?? 0;
+      if (transactionData.amount > walletBalance) {
+        return {
+          success: false,
+          msg: `Insufficient balance. Wallet only has ₱${walletBalance.toFixed(
+            2
+          )} available`,
+        };
+      }
+    }
+
     let imageUrl = null;
 
     if (transactionData.image?.uri) {
@@ -120,9 +156,25 @@ export const createTransaction = async (
 export const updateTransaction = async (
   transactionId: string,
   transactionData: Partial<TransactionType>,
-  oldTransaction?: Partial<TransactionType>
+  oldTransaction?: Partial<TransactionType>,
+  currentUserId?: string
 ): Promise<ResponseType> => {
   try {
+    // Verify ownership before updating
+    const transactionRef = doc(firestore, "transactions", transactionId);
+    const transactionDoc = await getDoc(transactionRef);
+
+    if (!transactionDoc.exists()) {
+      return { success: false, msg: "Transaction not found" };
+    }
+
+    if (currentUserId && transactionDoc.data()?.uid !== currentUserId) {
+      return {
+        success: false,
+        msg: "Unauthorized: You don't own this transaction",
+      };
+    }
+
     const dataToUpdate: Partial<TransactionType> = { ...transactionData };
 
     if (transactionData.image?.uri) {
@@ -140,8 +192,6 @@ export const updateTransaction = async (
 
       dataToUpdate.image = imageUploadRes.data;
     }
-
-    const transactionRef = doc(firestore, "transactions", transactionId);
 
     // If old transaction data is provided, reverse the old balance and apply new
     if (
@@ -185,15 +235,30 @@ export const deleteTransaction = async (
   transactionId: string,
   walletId?: string,
   amount?: number,
-  type?: string
+  type?: string,
+  currentUserId?: string
 ): Promise<ResponseType> => {
   try {
+    // Verify ownership before deleting
+    const transactionRef = doc(firestore, "transactions", transactionId);
+    const transactionDoc = await getDoc(transactionRef);
+
+    if (!transactionDoc.exists()) {
+      return { success: false, msg: "Transaction not found" };
+    }
+
+    if (currentUserId && transactionDoc.data()?.uid !== currentUserId) {
+      return {
+        success: false,
+        msg: "Unauthorized: You don't own this transaction",
+      };
+    }
+
     // Reverse the transaction effect on wallet
     if (walletId && amount && type) {
       await updateWalletBalance(walletId, amount, type, true);
     }
 
-    const transactionRef = doc(firestore, "transactions", transactionId);
     await deleteDoc(transactionRef);
 
     return { success: true, msg: "Transaction deleted successfully" };

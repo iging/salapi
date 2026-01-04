@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import { FirebaseError } from "firebase/app";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { AtIcon, EnvelopeIcon } from "phosphor-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -24,12 +24,18 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  ViewStyle,
 } from "react-native";
 import Toast from "react-native-toast-message";
 
 const ForgotPassword = () => {
   const router = useRouter();
   const [emailSent, setEmailSent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCount, setResendCount] = useState(0);
+  const MAX_RESEND_ATTEMPTS = 3;
+  const COOLDOWN_SECONDS = 60;
+
   const {
     control,
     handleSubmit,
@@ -40,10 +46,22 @@ const ForgotPassword = () => {
     defaultValues: { email: "" },
   });
 
+  // Cooldown timer effect
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(
+        () => setResendCooldown(resendCooldown - 1),
+        1000
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       await sendPasswordResetEmail(auth, data.email);
       setEmailSent(true);
+      setResendCooldown(COOLDOWN_SECONDS);
       Toast.show({
         type: "success",
         text1: "Email Sent",
@@ -60,9 +78,30 @@ const ForgotPassword = () => {
   };
 
   const handleResend = async () => {
+    // Check rate limiting
+    if (resendCooldown > 0) {
+      Toast.show({
+        type: "error",
+        text1: "Please Wait",
+        text2: `You can resend in ${resendCooldown} seconds`,
+      });
+      return;
+    }
+
+    if (resendCount >= MAX_RESEND_ATTEMPTS) {
+      Toast.show({
+        type: "error",
+        text1: "Too Many Attempts",
+        text2: "Please try again later or contact support",
+      });
+      return;
+    }
+
     const email = getValues("email");
     try {
       await sendPasswordResetEmail(auth, email);
+      setResendCount(resendCount + 1);
+      setResendCooldown(COOLDOWN_SECONDS);
       Toast.show({
         type: "success",
         text1: "Email Resent",
@@ -180,9 +219,24 @@ const ForgotPassword = () => {
                     </Typo>
                   </Button>
 
-                  <Button style={styles.resendButton} onPress={handleResend}>
+                  <Button
+                    style={
+                      {
+                        ...styles.resendButton,
+                        ...(resendCooldown > 0 ||
+                        resendCount >= MAX_RESEND_ATTEMPTS
+                          ? { opacity: 0.6 }
+                          : {}),
+                      } as ViewStyle
+                    }
+                    onPress={handleResend}
+                  >
                     <Typo fontWeight="600" color={colors.white} size={16}>
-                      Resend Email
+                      {resendCooldown > 0
+                        ? `Resend in ${resendCooldown}s`
+                        : resendCount >= MAX_RESEND_ATTEMPTS
+                        ? "Max attempts reached"
+                        : "Resend Email"}
                     </Typo>
                   </Button>
                 </View>

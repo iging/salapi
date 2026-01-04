@@ -5,6 +5,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -61,9 +62,22 @@ export const createWallet = async (
 
 export const updateWallet = async (
   walletId: string,
-  walletData: Partial<WalletType>
+  walletData: Partial<WalletType>,
+  currentUserId: string
 ): Promise<ResponseType> => {
   try {
+    // Verify ownership before updating
+    const walletRef = doc(firestore, "wallets", walletId);
+    const walletDoc = await getDoc(walletRef);
+
+    if (!walletDoc.exists()) {
+      return { success: false, msg: "Wallet not found" };
+    }
+
+    if (walletDoc.data()?.uid !== currentUserId) {
+      return { success: false, msg: "Unauthorized: You don't own this wallet" };
+    }
+
     const dataToUpdate: Partial<WalletType> = { name: walletData.name };
 
     if (walletData.amount !== undefined) {
@@ -86,7 +100,6 @@ export const updateWallet = async (
       dataToUpdate.image = imageUploadRes.data;
     }
 
-    const walletRef = doc(firestore, "wallets", walletId);
     await updateDoc(walletRef, dataToUpdate);
 
     return { success: true, msg: "Wallet updated successfully" };
@@ -97,8 +110,23 @@ export const updateWallet = async (
   }
 };
 
-export const deleteWallet = async (walletId: string): Promise<ResponseType> => {
+export const deleteWallet = async (
+  walletId: string,
+  currentUserId: string
+): Promise<ResponseType> => {
   try {
+    // Verify ownership before deleting
+    const walletRef = doc(firestore, "wallets", walletId);
+    const walletDoc = await getDoc(walletRef);
+
+    if (!walletDoc.exists()) {
+      return { success: false, msg: "Wallet not found" };
+    }
+
+    if (walletDoc.data()?.uid !== currentUserId) {
+      return { success: false, msg: "Unauthorized: You don't own this wallet" };
+    }
+
     // Delete all transactions associated with this wallet
     const transactionsRef = collection(firestore, "transactions");
     const q = query(transactionsRef, where("walletId", "==", walletId));
@@ -110,7 +138,6 @@ export const deleteWallet = async (walletId: string): Promise<ResponseType> => {
     await Promise.all(deletePromises);
 
     // Delete the wallet
-    const walletRef = doc(firestore, "wallets", walletId);
     await deleteDoc(walletRef);
 
     return {

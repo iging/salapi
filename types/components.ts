@@ -88,3 +88,14 @@ export type DialogProps = {
   onCancel: () => void;
   confirmColor?: string;
 };
+
+export type VerificationTooltipProps = {
+  visible: boolean;
+  isVerified: boolean;
+  onClose: () => void;
+  verifiedTitle?: string;
+  unverifiedTitle?: string;
+  verifiedMessage?: string;
+  unverifiedMessage?: string;
+  buttonText?: string;
+};
