@@ -6,13 +6,12 @@ import Typo from "@/components/typo";
 import { colors, radius, spacingX, spacingY } from "@/constants/theme";
 import { useAuth } from "@/contexts/auth-context";
 import {
-  exportToCSVWithDateRange,
   exportToPDFWithDateRange,
   getTransactionDateRange,
   hasTransactionsInRange,
 } from "@/services/export.services";
 import { verticalScale } from "@/utils/styling";
-import { ExportIcon, FileTextIcon, TableIcon } from "phosphor-react-native";
+import { ExportIcon, FileTextIcon } from "phosphor-react-native";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,12 +24,10 @@ import Toast from "react-native-toast-message";
 
 const SettingsModal = () => {
   const { user } = useAuth();
-  const [csvLoading, setCsvLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
 
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [exportType, setExportType] = useState<"csv" | "pdf">("csv");
   const [isLoadingRange, setIsLoadingRange] = useState(false);
   const [minDate, setMinDate] = useState<Date | undefined>(undefined);
   const [maxDate, setMaxDate] = useState<Date | undefined>(undefined);
@@ -142,8 +139,7 @@ const SettingsModal = () => {
     hasTransactions,
   ]);
 
-  const openDatePicker = (type: "csv" | "pdf") => {
-    setExportType(type);
+  const openDatePicker = () => {
     setShowDatePicker(true);
     // Reload date range in case new transactions were added
     loadDateRange();
@@ -163,54 +159,7 @@ const SettingsModal = () => {
     }
 
     setShowDatePicker(false);
-
-    if (exportType === "csv") {
-      await handleExportCSV(periodStart, periodEnd);
-    } else {
-      await handleExportPDF(periodStart, periodEnd);
-    }
-  };
-
-  const handleExportCSV = async (periodStart: Date, periodEnd: Date) => {
-    if (!user?.uid) {
-      Toast.show({
-        type: "error",
-        text1: "Export Failed",
-        text2: "Please log in to export data",
-      });
-      return;
-    }
-
-    setCsvLoading(true);
-    try {
-      const result = await exportToCSVWithDateRange(
-        user.uid,
-        periodStart,
-        periodEnd
-      );
-
-      if (result.success) {
-        Toast.show({
-          type: "success",
-          text1: "Export Complete",
-          text2: "Your transactions have been exported to CSV",
-        });
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Export Failed",
-          text2: result.msg || "Unable to export CSV",
-        });
-      }
-    } catch {
-      Toast.show({
-        type: "error",
-        text1: "Export Failed",
-        text2: "An unexpected error occurred",
-      });
-    } finally {
-      setCsvLoading(false);
-    }
+    await handleExportPDF(periodStart, periodEnd);
   };
 
   const handleExportPDF = async (periodStart: Date, periodEnd: Date) => {
@@ -236,13 +185,13 @@ const SettingsModal = () => {
         Toast.show({
           type: "success",
           text1: "Export Complete",
-          text2: "Your financial report has been generated",
+          text2: "Your statement has been generated",
         });
       } else {
         Toast.show({
           type: "error",
           text1: "Export Failed",
-          text2: result.msg || "Unable to generate PDF",
+          text2: result.msg || "Unable to generate statement",
         });
       }
     } catch {
@@ -255,8 +204,6 @@ const SettingsModal = () => {
       setPdfLoading(false);
     }
   };
-
-  const isExporting = csvLoading || pdfLoading;
 
   return (
     <ModalWrapper>
@@ -283,51 +230,17 @@ const SettingsModal = () => {
                 color={colors.neutral400}
                 style={styles.exportDescription}
               >
-                Export your complete transaction history and financial data.
-                Files will be saved to your device for sharing or backup.
+                Export your transaction history as a professional statement. The
+                PDF will be saved to your device for sharing or backup.
               </Typo>
 
               <TouchableOpacity
                 style={[
                   styles.exportButton,
-                  isExporting && styles.exportButtonDisabled,
+                  pdfLoading && styles.exportButtonDisabled,
                 ]}
-                onPress={() => openDatePicker("csv")}
-                disabled={isExporting}
-                activeOpacity={0.7}
-              >
-                <View style={styles.exportIconContainer}>
-                  {csvLoading ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <TableIcon
-                      size={verticalScale(22)}
-                      color={colors.primary}
-                      weight="fill"
-                    />
-                  )}
-                </View>
-                <View style={styles.exportButtonText}>
-                  <Typo size={15} fontWeight="600" color={colors.neutral100}>
-                    {csvLoading ? "Exporting..." : "Export as CSV"}
-                  </Typo>
-                  <Typo size={12} color={colors.neutral400}>
-                    Spreadsheet compatible format
-                  </Typo>
-                </View>
-                <ExportIcon
-                  size={verticalScale(18)}
-                  color={colors.neutral500}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.exportButton,
-                  isExporting && styles.exportButtonDisabled,
-                ]}
-                onPress={() => openDatePicker("pdf")}
-                disabled={isExporting}
+                onPress={openDatePicker}
+                disabled={pdfLoading}
                 activeOpacity={0.7}
               >
                 <View style={styles.exportIconContainer}>
@@ -343,10 +256,10 @@ const SettingsModal = () => {
                 </View>
                 <View style={styles.exportButtonText}>
                   <Typo size={15} fontWeight="600" color={colors.neutral100}>
-                    {pdfLoading ? "Exporting..." : "Export as PDF"}
+                    {pdfLoading ? "Generating..." : "Export Statement"}
                   </Typo>
                   <Typo size={12} color={colors.neutral400}>
-                    Professional printable report
+                    Professional PDF report
                   </Typo>
                 </View>
                 <ExportIcon
@@ -357,7 +270,7 @@ const SettingsModal = () => {
 
               <View style={styles.exportNote}>
                 <Typo size={11} color={colors.neutral500}>
-                  Exports include all transactions with category, date, and
+                  Statement includes all transactions with category, date, and
                   amount details.
                 </Typo>
               </View>
@@ -368,7 +281,6 @@ const SettingsModal = () => {
         {/* Date Picker Modal */}
         <ExportDatePicker
           visible={showDatePicker}
-          exportType={exportType}
           minDate={minDate}
           maxDate={maxDate}
           hasTransactions={hasTransactions}

@@ -17,7 +17,6 @@ import Typo from "./typo";
 
 const ExportDatePicker = ({
   visible,
-  exportType,
   minDate,
   maxDate,
   hasTransactions,
@@ -124,7 +123,7 @@ const ExportDatePicker = ({
           {/* Header */}
           <View style={styles.header}>
             <Typo size={18} fontWeight="700" color={colors.white}>
-              Export as {exportType.toUpperCase()}
+              Export Statement
             </Typo>
             <TouchableOpacity onPress={onClose} hitSlop={8}>
               <XIcon size={verticalScale(24)} color={colors.neutral400} />

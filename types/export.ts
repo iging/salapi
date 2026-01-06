@@ -1,8 +1,5 @@
-export type ExportType = "csv" | "pdf";
-
 export type ExportDatePickerProps = {
   visible: boolean;
-  exportType: ExportType;
   minDate?: Date;
   maxDate?: Date;
   hasTransactions: boolean;
