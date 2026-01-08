@@ -27,7 +27,12 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
-type VerificationStatus = "idle" | "checking" | "verified" | "unverified";
+type VerificationStatus =
+  | "idle"
+  | "checking"
+  | "verified"
+  | "unverified"
+  | "notfound";
 
 const Login = () => {
   const router = useRouter();
@@ -93,7 +98,8 @@ const Login = () => {
           setVerificationStatus(result.verified ? "verified" : "unverified");
           animateStatusIcon();
         } else {
-          setVerificationStatus("idle");
+          setVerificationStatus("notfound");
+          animateStatusIcon();
         }
       } catch {
         setVerificationStatus("idle");
@@ -119,6 +125,9 @@ const Login = () => {
     }
 
     const isVerified = verificationStatus === "verified";
+    const showError =
+      verificationStatus === "unverified" || verificationStatus === "notfound";
+
     return (
       <TouchableOpacity
         onPress={() => setShowTooltip(true)}
@@ -139,13 +148,13 @@ const Login = () => {
               color={colors.green}
               weight="fill"
             />
-          ) : (
+          ) : showError ? (
             <Icons.XCircleIcon
               size={verticalScale(20)}
               color={colors.rose}
               weight="fill"
             />
-          )}
+          ) : null}
         </Animated.View>
       </TouchableOpacity>
     );
@@ -267,7 +276,13 @@ const Login = () => {
       </KeyboardAvoidingView>
       <VerificationTooltip
         visible={showTooltip}
-        isVerified={verificationStatus === "verified"}
+        status={
+          verificationStatus === "verified"
+            ? "verified"
+            : verificationStatus === "notfound"
+            ? "notfound"
+            : "unverified"
+        }
         onClose={() => setShowTooltip(false)}
       />
     </ScreenWrapper>

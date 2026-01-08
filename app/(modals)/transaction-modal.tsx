@@ -52,6 +52,7 @@ const TransactionModal = () => {
   const [loading, setLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [amountDisplay, setAmountDisplay] = useState("");
 
   const walletConstraints = useMemo(
     () => (user?.uid ? [where("uid", "==", user.uid)] : []),
@@ -111,7 +112,9 @@ const TransactionModal = () => {
         "type",
         (oldTransaction.type as "income" | "expense") || "expense"
       );
-      setValue("amount", Number(oldTransaction.amount) || 0);
+      const amount = Number(oldTransaction.amount) || 0;
+      setValue("amount", amount);
+      setAmountDisplay(amount > 0 ? amount.toFixed(2) : "");
       setValue("category", oldTransaction.category || "");
       setValue("customCategory", oldTransaction.customCategory || "");
       setValue(
@@ -304,13 +307,33 @@ const TransactionModal = () => {
               <Controller
                 control={control}
                 name="amount"
-                render={({ field: { onChange, value } }) => (
+                render={({ field: { onChange } }) => (
                   <Input
                     label="Amount"
-                    placeholder="Enter amount"
-                    keyboardType="numeric"
-                    value={value ? String(value) : ""}
-                    onChangeText={(text) => onChange(Number(text) || 0)}
+                    placeholder="Enter amount (e.g., 100.00)"
+                    keyboardType="decimal-pad"
+                    value={amountDisplay}
+                    onChangeText={(text) => {
+                      // Allow empty, numbers, and one decimal point
+                      const sanitized = text.replace(/[^0-9.]/g, "");
+                      // Prevent multiple decimal points
+                      const parts = sanitized.split(".");
+                      const formatted =
+                        parts.length > 2
+                          ? parts[0] + "." + parts.slice(1).join("")
+                          : sanitized;
+                      // Limit to 2 decimal places
+                      const decimalParts = formatted.split(".");
+                      const finalValue =
+                        decimalParts.length === 2 && decimalParts[1].length > 2
+                          ? decimalParts[0] + "." + decimalParts[1].slice(0, 2)
+                          : formatted;
+
+                      setAmountDisplay(finalValue);
+                      onChange(
+                        finalValue === "" ? 0 : parseFloat(finalValue) || 0
+                      );
+                    }}
                     error={errors.amount?.message}
                   />
                 )}

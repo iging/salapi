@@ -91,11 +91,13 @@ export type DialogProps = {
 
 export type VerificationTooltipProps = {
   visible: boolean;
-  isVerified: boolean;
+  status: "verified" | "unverified" | "notfound";
   onClose: () => void;
   verifiedTitle?: string;
   unverifiedTitle?: string;
+  notfoundTitle?: string;
   verifiedMessage?: string;
   unverifiedMessage?: string;
+  notfoundMessage?: string;
   buttonText?: string;
 };

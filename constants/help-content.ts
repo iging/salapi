@@ -30,7 +30,7 @@ export const helpTopics: HelpTopicType[] = [
   {
     id: "reports",
     title: "Exporting Reports",
-    description: "Generate CSV and PDF reports of your financial data.",
+    description: "Generate PDF reports of your financial data.",
   },
 ];
 
@@ -155,16 +155,12 @@ export const helpSections: HelpSectionType[] = [
     icon: Export,
     content: [
       {
-        heading: "Data Export Options",
-        text: "Salapi allows you to export your financial data for backup, record-keeping, or analysis in external tools. Access this feature from Settings and then Data Export.",
+        heading: "PDF Report Export",
+        text: "Salapi allows you to export your financial data as a professionally formatted PDF report. Access this feature from Settings and then Data Export.",
       },
       {
-        heading: "CSV Export",
-        text: "The CSV format is ideal for importing into spreadsheet applications like Microsoft Excel or Google Sheets. Each transaction is listed with its date, type, category, description, and amount.",
-      },
-      {
-        heading: "PDF Report",
-        text: "Generate a professionally formatted PDF report that includes a financial summary with total income, expenses, and net balance, along with a complete transaction history. This format is perfect for printing or sharing.",
+        heading: "What's Included",
+        text: "The PDF report includes a financial summary with total income, expenses, and net balance, along with a complete transaction history. This format is perfect for printing, sharing, or keeping records.",
       },
       {
         heading: "Date Range Selection",

@@ -340,7 +340,7 @@ export const fetchMonthlyStats = async (uid: string) => {
       ).format("MMM YY");
 
       const monthData = monthlyData.find(
-        (m) => m.month === transactionMonthYear
+        (m) => m.monthKey === transactionMonthYear
       );
       if (monthData) {
         if (transaction.type === "income") {

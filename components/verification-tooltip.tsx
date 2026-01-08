@@ -13,14 +13,35 @@ import {
 
 const VerificationTooltip = ({
   visible,
-  isVerified,
+  status,
   onClose,
   verifiedTitle = "Email Verified",
   unverifiedTitle = "Email Not Verified",
+  notfoundTitle = "Account Not Found",
   verifiedMessage = "Your email address has been successfully verified. You can proceed to log in to your account.",
   unverifiedMessage = "Your email address has not been verified yet. Please check your inbox (including spam/junk folder) for the verification link we sent during registration.",
+  notfoundMessage = "No account exists with this email address. Please check your email or create a new account.",
   buttonText = "Got it",
 }: VerificationTooltipProps) => {
+  const isVerified = status === "verified";
+  const isNotFound = status === "notfound";
+
+  const getTitle = () => {
+    if (isVerified) return verifiedTitle;
+    if (isNotFound) return notfoundTitle;
+    return unverifiedTitle;
+  };
+
+  const getMessage = () => {
+    if (isVerified) return verifiedMessage;
+    if (isNotFound) return notfoundMessage;
+    return unverifiedMessage;
+  };
+
+  const getColor = () => {
+    return isVerified ? colors.green : colors.rose;
+  };
+
   return (
     <Modal
       visible={visible}
@@ -35,7 +56,7 @@ const VerificationTooltip = ({
               style={[
                 styles.container,
                 {
-                  borderColor: isVerified ? colors.green : colors.rose,
+                  borderColor: getColor(),
                 },
               ]}
             >
@@ -53,22 +74,18 @@ const VerificationTooltip = ({
                     weight="fill"
                   />
                 )}
-                <Typo
-                  size={16}
-                  fontWeight="700"
-                  color={isVerified ? colors.green : colors.rose}
-                >
-                  {isVerified ? verifiedTitle : unverifiedTitle}
+                <Typo size={16} fontWeight="700" color={getColor()}>
+                  {getTitle()}
                 </Typo>
               </View>
               <Typo size={14} color={colors.textLight} style={styles.message}>
-                {isVerified ? verifiedMessage : unverifiedMessage}
+                {getMessage()}
               </Typo>
               <TouchableOpacity
                 style={[
                   styles.button,
                   {
-                    backgroundColor: isVerified ? colors.green : colors.rose,
+                    backgroundColor: getColor(),
                   },
                 ]}
                 onPress={onClose}
