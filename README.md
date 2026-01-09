@@ -18,7 +18,7 @@ Salapi is a cross-platform mobile application built with React Native and Expo, 
 - **Transaction Tracking:** Record income and expenses with categories, descriptions, dates, and optional receipt images
 - **Real-Time Balance Calculation:** Automatic wallet balance updates based on recorded transactions
 - **Statistical Analytics:** Visualize spending patterns with weekly, monthly, and yearly bar charts
-- **Data Export:** Generate and share transaction reports in PDF and CSV formats with customizable date ranges
+- **Data Export:** Generate and share transaction reports in PDF format with customizable date ranges
 - **Secure Authentication:** Email-based registration with verification, password recovery, and account management
 - **Search Functionality:** Filter and search transactions by category, description, or amount
 - **Cloud Image Storage:** Attach receipt images to transactions via Cloudinary integration
@@ -177,8 +177,7 @@ npm run web
 1. Navigate to Profile and access Settings
 2. Select the Export option
 3. Choose date range using the date picker
-4. Select format (PDF or CSV)
-5. Share or save the generated report
+4. Generate and share the PDF report
 
 ---
 
