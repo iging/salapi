@@ -85,6 +85,7 @@ const SearchModal = () => {
           {/* Search Input */}
           <ScrollView
             contentContainerStyle={styles.form}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
