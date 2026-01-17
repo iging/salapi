@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Salapi",
   slug: "salapi",
-  version: "1.0.0",
+  version: "1.0.5",
   orientation: "portrait",
   icon: "./assets/logo/salapi-logo.png",
   scheme: "salapi",

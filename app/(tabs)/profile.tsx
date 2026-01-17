@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { getProfileImage } from "@/services/image.services";
 import { accountOptionType } from "@/types";
 import { verticalScale } from "@/utils/styling";
+import Constants from "expo-constants";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import {
@@ -33,6 +34,9 @@ const Profile = () => {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+  const buildNumber = appVersion.split(".")[2] ?? "0";
 
   const accountOptions: accountOptionType[] = [
     {
@@ -186,6 +190,12 @@ const Profile = () => {
             onConfirm={handleLogout}
             onCancel={() => setShowLogoutDialog(false)}
           />
+          {/* Version Display */}
+          <View style={styles.versionContainer}>
+            <Typo size={12} color={colors.neutral500}>
+              Version {appVersion} ({buildNumber})
+            </Typo>
+          </View>
         </View>
       </ScrollView>
     </ScreenWrapper>
@@ -259,5 +269,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacingX._10,
+  },
+  versionContainer: {
+    alignItems: "center",
+    paddingVertical: spacingY._20,
+    marginTop: spacingY._10,
   },
 });
