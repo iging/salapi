@@ -16,6 +16,7 @@ import { TransactionType } from "@/types";
 import { toPeso } from "@/utils/currency";
 import { scale, verticalScale } from "@/utils/styling";
 import SegmentControl from "@react-native-segmented-control/segmented-control";
+import { useFocusEffect } from "@react-navigation/native";
 import { where } from "firebase/firestore";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -39,7 +40,7 @@ const Statistics = () => {
 
   const transactionConstraints = useMemo(
     () => (user?.uid ? [where("uid", "==", user.uid)] : []),
-    [user?.uid]
+    [user?.uid],
   );
 
   const {
@@ -60,7 +61,7 @@ const Statistics = () => {
     return [...transactionsRaw]
       .sort(
         (a, b) =>
-          moment(toDate(b.date)).valueOf() - moment(toDate(a.date)).valueOf()
+          moment(toDate(b.date)).valueOf() - moment(toDate(a.date)).valueOf(),
       )
       .slice(0, 10);
   }, [transactionsRaw]);
@@ -126,7 +127,7 @@ const Statistics = () => {
 
         // Filter out periods with no data (income = 0 and expense = 0)
         const filteredData = result.data.filter(
-          (item: any) => item.income > 0 || item.expense > 0
+          (item: any) => item.income > 0 || item.expense > 0,
         );
 
         filteredData.forEach((item: any) => {
@@ -134,8 +135,8 @@ const Statistics = () => {
             activeIndex === 0
               ? item.day
               : activeIndex === 1
-              ? item.month
-              : `'${item.year.slice(-2)}`;
+                ? item.month
+                : `'${item.year.slice(-2)}`;
 
           // Income bar
           formattedData.push({
@@ -168,6 +169,13 @@ const Statistics = () => {
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
+
+  // Refresh chart when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats();
+    }, [fetchStats]),
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

@@ -44,32 +44,50 @@ const Profile = () => {
       icon: <UserIcon size={26} color={colors.white} />,
       routeName: "/(modals)/profile-modal",
       bgColor: colors.neutral600,
+      category: "Account",
     },
     {
       title: "Settings",
       icon: <GearSixIcon size={26} color={colors.white} />,
       routeName: "/(modals)/settings-modal",
       bgColor: colors.neutral600,
+      category: "Account",
     },
     {
       title: "Help",
       icon: <QuestionIcon size={26} color={colors.white} />,
       routeName: "/(modals)/help-center-modal",
       bgColor: colors.neutral600,
+      category: "Support",
     },
     {
       title: "Privacy Policy",
       icon: <LockIcon size={26} color={colors.white} />,
       routeName: "/(modals)/privacy-policy-modal",
       bgColor: colors.neutral600,
+      category: "Support",
     },
     {
       title: "Logout",
       icon: <PowerIcon size={26} color={colors.white} />,
       routeName: "",
       bgColor: colors.rose,
+      category: "Actions",
     },
   ];
+
+  // Group options by category
+  const groupedOptions = accountOptions.reduce(
+    (acc, option) => {
+      const category = option.category || "Other";
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(option);
+      return acc;
+    },
+    {} as Record<string, accountOptionType[]>,
+  );
 
   const handleRefresh = useCallback(async () => {
     if (!user?.uid) return;
@@ -145,40 +163,73 @@ const Profile = () => {
           </View>
           {/* Account Options */}
           <View style={styles.accountOptions}>
-            {accountOptions.map((items, index) => {
-              return (
-                <Animated.View
-                  entering={FadeInDown.delay(index * 50)
-                    .springify()
-                    .damping(14)}
-                  style={styles.listItem}
-                  key={index.toString()}
-                >
-                  <TouchableOpacity
-                    style={styles.flexRow}
-                    onPress={() => handlePress(items)}
+            {Object.entries(groupedOptions).map(
+              ([category, options], categoryIndex) => (
+                <View key={category} style={styles.categoryGroup}>
+                  {/* Category Header */}
+                  <Typo
+                    size={13}
+                    color={colors.neutral500}
+                    fontWeight="600"
+                    style={styles.categoryHeader}
                   >
-                    {/* Icon */}
-                    <View
-                      style={[
-                        styles.listIcon,
-                        { backgroundColor: items?.bgColor },
-                      ]}
-                    >
-                      {items.icon && items.icon}
-                    </View>
-                    <Typo size={16} style={{ flex: 1 }} fontWeight="500">
-                      {items.title}
-                    </Typo>
-                    <CaretRightIcon
-                      size={verticalScale(20)}
-                      weight="bold"
-                      color={colors.white}
-                    />
-                  </TouchableOpacity>
-                </Animated.View>
-              );
-            })}
+                    {category}
+                  </Typo>
+                  {/* Category Items Container */}
+                  <View style={styles.categoryItemsContainer}>
+                    {options.map((items, index) => {
+                      const isFirst = index === 0;
+                      const isLast = index === options.length - 1;
+
+                      return (
+                        <Animated.View
+                          entering={FadeInDown.delay(
+                            (categoryIndex * options.length + index) * 50,
+                          )
+                            .springify()
+                            .damping(14)}
+                          key={index.toString()}
+                        >
+                          <TouchableOpacity
+                            style={[
+                              styles.listItem,
+                              isFirst && styles.listItemFirst,
+                              isLast && styles.listItemLast,
+                              !isLast && styles.listItemBorder,
+                            ]}
+                            onPress={() => handlePress(items)}
+                          >
+                            <View style={styles.flexRow}>
+                              {/* Icon */}
+                              <View
+                                style={[
+                                  styles.listIcon,
+                                  { backgroundColor: items?.bgColor },
+                                ]}
+                              >
+                                {items.icon && items.icon}
+                              </View>
+                              <Typo
+                                size={16}
+                                style={{ flex: 1 }}
+                                fontWeight="500"
+                              >
+                                {items.title}
+                              </Typo>
+                              <CaretRightIcon
+                                size={verticalScale(20)}
+                                weight="bold"
+                                color={colors.neutral500}
+                              />
+                            </View>
+                          </TouchableOpacity>
+                        </Animated.View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ),
+            )}
           </View>
           <Dialog
             visible={showLogoutDialog}
@@ -210,6 +261,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: verticalScale(100),
   },
   container: {
     flex: 1,
@@ -260,10 +312,38 @@ const styles = StyleSheet.create({
     borderCurve: "continuous",
   },
   listItem: {
-    marginBottom: verticalScale(17),
+    backgroundColor: colors.neutral900,
+    paddingHorizontal: spacingX._15,
+    paddingVertical: spacingY._15,
+  },
+  listItemFirst: {
+    borderTopLeftRadius: radius._15,
+    borderTopRightRadius: radius._15,
+  },
+  listItemLast: {
+    borderBottomLeftRadius: radius._15,
+    borderBottomRightRadius: radius._15,
+  },
+  listItemBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral800,
   },
   accountOptions: {
-    marginTop: spacingY._35,
+    marginTop: spacingY._25,
+    gap: spacingY._20,
+  },
+  categoryGroup: {
+    gap: spacingY._10,
+  },
+  categoryHeader: {
+    paddingHorizontal: spacingX._5,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  categoryItemsContainer: {
+    backgroundColor: colors.neutral900,
+    borderRadius: radius._15,
+    overflow: "hidden",
   },
   flexRow: {
     flexDirection: "row",

@@ -13,6 +13,7 @@ export type accountOptionType = {
   icon: ReactNode;
   bgColor: string;
   routeName?: any;
+  category?: string;
 };
 
 export type TypoProps = {

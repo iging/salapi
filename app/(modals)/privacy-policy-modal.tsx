@@ -542,8 +542,6 @@ const styles = StyleSheet.create({
     borderRadius: radius._12,
     padding: spacingX._15,
     marginBottom: spacingY._15,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
   },
   summaryText: {
     marginTop: spacingY._7,
