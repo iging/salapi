@@ -21,7 +21,7 @@ import { uploadFileToCloudinary } from "./image.services";
 
 export const updateUser = async (
   uid: string,
-  userData: UserDataType
+  userData: UserDataType,
 ): Promise<ResponseType> => {
   try {
     const dataToUpdate: Partial<UserDataType> = { name: userData.name };
@@ -29,7 +29,7 @@ export const updateUser = async (
     if (userData.image && userData.image.uri) {
       const imageUploadRes = await uploadFileToCloudinary(
         userData.image,
-        "profiles"
+        "profiles",
       );
 
       if (!imageUploadRes.success) {
@@ -61,7 +61,8 @@ export const deleteUserAccount = async (uid: string): Promise<ResponseType> => {
     const transactionsSnapshot = await getDocs(transactionsQuery);
 
     const deleteTransactionPromises = transactionsSnapshot.docs.map(
-      (docSnapshot) => deleteDoc(doc(firestore, "transactions", docSnapshot.id))
+      (docSnapshot) =>
+        deleteDoc(doc(firestore, "transactions", docSnapshot.id)),
     );
     await Promise.all(deleteTransactionPromises);
 
@@ -71,7 +72,7 @@ export const deleteUserAccount = async (uid: string): Promise<ResponseType> => {
     const walletsSnapshot = await getDocs(walletsQuery);
 
     const deleteWalletPromises = walletsSnapshot.docs.map((docSnapshot) =>
-      deleteDoc(doc(firestore, "wallets", docSnapshot.id))
+      deleteDoc(doc(firestore, "wallets", docSnapshot.id)),
     );
     await Promise.all(deleteWalletPromises);
 
@@ -98,7 +99,7 @@ export const deleteUserAccount = async (uid: string): Promise<ResponseType> => {
 
 export const changeUserPassword = async (
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<ResponseType> => {
   try {
     const currentUser = auth.currentUser;
@@ -110,7 +111,7 @@ export const changeUserPassword = async (
     // Re-authenticate the user with their current password
     const credential = EmailAuthProvider.credential(
       currentUser.email,
-      currentPassword
+      currentPassword,
     );
 
     await reauthenticateWithCredential(currentUser, credential);
@@ -135,12 +136,12 @@ export type EmailVerificationResult = {
 };
 
 export const checkEmailVerificationStatus = async (
-  email: string
+  email: string,
 ): Promise<EmailVerificationResult> => {
   try {
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Query Firestore directly - try both email formats for backward compatibility
+    // Query Firestore to check if user document exists
     const usersRef = collection(firestore, "users");
 
     // Try lowercase first
@@ -154,6 +155,10 @@ export const checkEmailVerificationStatus = async (
     }
 
     if (querySnapshot.empty) {
+      // User document doesn't exist in Firestore
+      // This could mean:
+      // 1. Account was never registered
+      // 2. Account exists in Auth but Firestore doc wasn't created (edge case)
       return { exists: false, verified: false };
     }
 
@@ -165,7 +170,10 @@ export const checkEmailVerificationStatus = async (
     const isVerified = userData.emailVerified === true;
 
     return { exists: true, verified: isVerified };
-  } catch {
+  } catch (error) {
+    if (__DEV__) {
+      console.error("Error checking email verification status:", error);
+    }
     return { exists: false, verified: false };
   }
 };
